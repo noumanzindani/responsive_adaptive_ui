@@ -1,36 +1,77 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 
-/// A widget that builds different layouts depending on the screen width.
+/// Represents different device types for responsive UI.
+enum DeviceType { mobile, tablet, desktop }
+
+/// A builder that helps adapt the UI to different screen sizes.
 /// 
-/// - Mobile: <600px
-/// - Tablet: 600px–1024px
-/// - Desktop: >1024px
+/// Two ways to use:
+/// 
+/// 1. **Pass individual builders** for `mobile`, `tablet`, and `desktop`.
+/// 
+/// ```dart
+/// ResponsiveBuilder(
+///   mobile: (context) => MobileView(),
+///   tablet: (context) => TabletView(),
+///   desktop: (context) => DesktopView(),
+/// )
+/// ```
+/// 
+/// 2. **Use a single `builder` with [DeviceType]**:
+/// 
+/// ```dart
+/// ResponsiveBuilder(
+///   builder: (context, deviceType) {
+///     switch (deviceType) {
+///       case DeviceType.mobile: return MobileView();
+///       case DeviceType.tablet: return TabletView();
+///       case DeviceType.desktop: return DesktopView();
+///     }
+///   },
+/// )
+/// ```
 class ResponsiveBuilder extends StatelessWidget {
-  final WidgetBuilder mobile;
+  final WidgetBuilder? mobile;
   final WidgetBuilder? tablet;
   final WidgetBuilder? desktop;
 
-  /// Default breakpoints
-  static const double _tabletBreakpoint = 600;
-  static const double _desktopBreakpoint = 1024;
+  /// Alternative single builder that provides the [DeviceType].
+  final Widget Function(BuildContext, DeviceType)? builder;
 
   const ResponsiveBuilder({
     super.key,
-    required this.mobile,
+    this.mobile,
     this.tablet,
     this.desktop,
+    this.builder,
   });
 
   @override
   Widget build(BuildContext context) {
-    final double width = MediaQuery.of(context).size.width;
+    final width = MediaQuery.of(context).size.width;
+    final deviceType = width < 600
+        ? DeviceType.mobile
+        : width < 1024
+            ? DeviceType.tablet
+            : DeviceType.desktop;
 
-    if (width >= _desktopBreakpoint && desktop != null) {
-      return desktop!(context);
-    } else if (width >= _tabletBreakpoint && tablet != null) {
-      return tablet!(context);
-    } else {
-      return mobile(context);
+    if (builder != null) {
+      return builder!(context, deviceType);
+    }
+
+    switch (deviceType) {
+      case DeviceType.mobile:
+        return mobile?.call(context) ??
+            const Center(child: Text("No Mobile Layout Provided"));
+      case DeviceType.tablet:
+        return tablet?.call(context) ??
+            mobile?.call(context) ??
+            const Center(child: Text("No Tablet Layout Provided"));
+      case DeviceType.desktop:
+        return desktop?.call(context) ??
+            tablet?.call(context) ??
+            mobile?.call(context) ??
+            const Center(child: Text("No Desktop Layout Provided"));
     }
   }
 }

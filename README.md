@@ -26,7 +26,7 @@ Add this to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  responsive_adaptive_ui: ^0.0.1
+  responsive_adaptive_ui: ^0.0.2
 ```
 
 ---
